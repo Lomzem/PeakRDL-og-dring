@@ -1,116 +1,50 @@
 # PeakRDL OG Decoder Ring
 
-PeakRDL exporter for generating OG decoder-ring C headers from SystemRDL.
+This PeakRDL exporter makes a C decoder-ring header from SystemRDL.
 
 ## Install
 
-From Git:
-
 ```sh
-uv add git+ssh://git@github.com/Lomzem/PeakRDL-og-dring.git
-# or
 pip install git+ssh://git@github.com/Lomzem/PeakRDL-og-dring.git
-```
-
-Clone for development:
-
-```sh
-git clone git@github.com:Lomzem/PeakRDL-og-dring.git
-cd PeakRDL-og-dring
-uv sync --extra test
-```
-
-Remote:
-
-```sh
-git remote -v
-# origin  git@github.com:Lomzem/PeakRDL-og-dring.git (fetch)
-# origin  git@github.com:Lomzem/PeakRDL-og-dring.git (push)
-```
-
-Local setup:
-
-```sh
-uv sync --extra test
 ```
 
 ## Command Line
 
 ```sh
-uv run peakrdl og-dring path/to/input.rdl -o path/to/output.h \
-  --guard-prefix MY_DEVICE_PARAM_DRING
+peakrdl og-dring input.rdl -o output.h
 ```
 
 Options:
 
-- `--guard-prefix NAME`: controls the generated include guard.
-- `--include HEADER`: header that provides `ParamComp`; defaults to `param_comm_services.h`.
+- `--guard-prefix NAME`: Sets the include guard. If you do not set it, the exporter uses the output file name.
+- `--include HEADER`: Sets the header that has `ParamComp`. The default is `param_comm_services.h`.
 
 ## Python API
-
-Export directly from an RDL file:
 
 ```python
 from peakrdl_og_dring import export_file
 
-export_file(
-    "path/to/input.rdl",
-    "path/to/output.h",
-    guard_prefix="MY_DEVICE_PARAM_DRING",
-)
-```
-
-Export from an already-elaborated SystemRDL node:
-
-```python
-from peakrdl_og_dring import OgDringExporter
-
-OgDringExporter().export(top_node, "path/to/output.h")
+export_file("input.rdl", "output.h", guard_prefix="MY_DEVICE")
 ```
 
 ## Output
 
-The generated header contains:
+The header has these items:
 
-- `enum Registers`
-- `enum Parameters`
-- `static const ParamComp ParamTable[PARAM_COUNT]`
-- C enums for SystemRDL encoded field values
+- `enum Registers`: One `REG_<REGISTER>` item for each register.
+- `enum Parameters`: One `<REGISTER>_<FIELD>` item for each field.
+- `ParamTable`: One `{register, mask, shift}` entry for each parameter.
+- One C enum for each encoded field.
 
-Each `ParamTable` entry maps a parameter to `{register, mask, shift}`.
+## Limits
 
-RDL-derived identifiers are sanitized and converted to uppercase. Register
-enumerators use `REG_<REGISTER>`, and parameter enumerators always use
-`<REGISTER>_<FIELD>`. Each parameter has a same-line `address`, `mask`, and
-`shift` comment in hexadecimal. The `doc_group` property creates section
-comments in both `enum Registers` and `enum Parameters`. Group text is kept on
-one safe C comment line: whitespace is collapsed and backslashes are shown as
-`\x5C`. The line-splicing trigraph `??/` is neutralized as `?? /`.
-
-Each encoded field gets its own enum based on its use site, even when fields
-use enum types with the same name. Its tag is `<REGISTER>_<FIELD>_E`, and its
-members are `<REGISTER>_<FIELD>_<RDL_VARIANT>`. A comment before the enum starts
-with the exact associated `<REGISTER>_<FIELD>` parameter identifier. It also
-gives the source `<register>.<field>` use. Generated register, parameter,
-enum-tag, and enum-member collisions are reported after identifier sanitization.
-
-Encoded values must be in the supported C `int` range from `0` through
-`2147483647`. SystemRDL compiler enum values are nonnegative. The exporter
-rejects an encoded member outside this range instead of generating an invalid C
-enumerator.
-
-Register addresses use the same `0` through `2147483647` range. Register arrays
-are not supported; use scalar registers in the flat production address map.
-Generated masks must fit in an unsigned 64-bit C integer constant, from `0`
-through `0xFFFFFFFFFFFFFFFF`.
-
-The `param_include` API option accepts non-empty header names made from letters,
-digits, `/`, `.`, `_`, and `-`.
-
-These naming changes are a breaking change to the generated C API.
+- Register addresses and enum values must be in the range `0` to `2147483647`.
+- Register arrays are not supported.
+- If two names are the same after conversion, the export stops with an error.
 
 ## Test
 
 ```sh
+uv sync --extra test
 uv run pytest -q
 ```
