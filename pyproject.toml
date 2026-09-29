@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peakrdl-og-dring"
+version = "0.1.0"
+description = "PeakRDL exporter for legacy OG decoder ring headers"
+requires-python = ">=3.9"
+dependencies = [
+    "peakrdl-cli >= 1.2.3",
+    "systemrdl-compiler >= 1.32",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[project.entry-points."peakrdl.exporters"]
+og-dring = "peakrdl_og_dring.__peakrdl__:Exporter"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
