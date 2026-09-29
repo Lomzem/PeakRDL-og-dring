@@ -4,14 +4,25 @@ This PeakRDL exporter makes a C decoder-ring header from SystemRDL.
 
 ## Install
 
+Add the exporter to your project:
+
 ```sh
-pip install git+ssh://git@github.com/Lomzem/PeakRDL-og-dring.git
+uv add git+ssh://git@github.com/Lomzem/PeakRDL-og-dring.git
 ```
 
 ## Command Line
 
+Run the exporter in your project:
+
 ```sh
-peakrdl og-dring input.rdl -o output.h
+uv run peakrdl og-dring input.rdl -o output.h
+```
+
+Run the exporter without installation:
+
+```sh
+uv run --with git+ssh://git@github.com/Lomzem/PeakRDL-og-dring.git \
+  peakrdl og-dring input.rdl -o output.h
 ```
 
 Options:
@@ -45,6 +56,5 @@ The header has these items:
 ## Test
 
 ```sh
-uv sync --extra test
-uv run pytest -q
+uv run --with pytest pytest -q
 ```
